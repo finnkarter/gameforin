@@ -1,5 +1,5 @@
 // 업적 시스템
-export const ACHIEVEMENTS = [
+const ACHIEVEMENTS = [
     { 
         id: 'first_shot', 
         name: '첫 발', 
@@ -98,7 +98,7 @@ export const ACHIEVEMENTS = [
     }
 ];
 
-export function checkAchievements(stats, unlockedAchievements) {
+function checkAchievements(stats, unlockedAchievements) {
     const newAchievements = [];
     
     ACHIEVEMENTS.forEach(achievement => {
@@ -111,4 +111,8 @@ export function checkAchievements(stats, unlockedAchievements) {
     
     return newAchievements;
 }
+
+// 전역 변수로 노출
+window.ACHIEVEMENTS = ACHIEVEMENTS;
+window.checkAchievements = checkAchievements;
 

@@ -1,19 +1,11 @@
 // 메인 게임 로직
-import { WEAPONS, getWeaponById } from './data/weapons.js';
-import { ATTACHMENTS, CATEGORY_NAMES, calculateWeaponStats, getAttachmentById } from './data/attachments.js';
-import { ACHIEVEMENTS } from './data/achievements.js';
-import { TRAINING_PROGRAMS, DIFFICULTY_LEVELS } from './data/training.js';
-import { SHOP_ITEMS, getRandomDrop } from './data/shop.js';
-import { SPECIAL_TARGET_TYPES, SpecialTarget, shouldSpawnSpecialTarget } from './data/specialTargets.js';
-import { GameState, LEVEL_XP } from './modules/gameState.js';
-import { Renderer } from './modules/renderer.js';
-import { UIManager } from './modules/ui.js';
+// 모든 모듈은 HTML에서 순서대로 로딩되어 전역 변수로 사용 가능
 
 // 게임 인스턴스
-const gameState = new GameState();
+const gameState = new window.GameState();
 const canvas = document.getElementById('gameCanvas');
-const renderer = new Renderer(canvas);
-const uiManager = new UIManager(gameState);
+const renderer = new window.Renderer(canvas);
+const uiManager = new window.UIManager(gameState);
 
 // 게임 변수
 let gameRunning = false;
@@ -123,8 +115,8 @@ function renderDifficultySelector() {
     if (!container) return;
 
     container.innerHTML = '';
-    Object.keys(DIFFICULTY_LEVELS).forEach(key => {
-        const diff = DIFFICULTY_LEVELS[key];
+    Object.keys(window.DIFFICULTY_LEVELS).forEach(key => {
+        const diff = window.DIFFICULTY_LEVELS[key];
         const btn = document.createElement('button');
         btn.className = 'difficulty-btn';
         btn.dataset.difficulty = key;
@@ -148,8 +140,8 @@ function renderTrainingPrograms() {
     if (!container) return;
 
     container.innerHTML = '';
-    Object.keys(TRAINING_PROGRAMS).forEach(key => {
-        const program = TRAINING_PROGRAMS[key];
+    Object.keys(window.TRAINING_PROGRAMS).forEach(key => {
+        const program = window.TRAINING_PROGRAMS[key];
         const div = document.createElement('div');
         div.className = 'training-item';
         div.innerHTML = `
@@ -177,7 +169,7 @@ function renderWeaponList() {
     const list = document.getElementById('weaponList');
     list.innerHTML = '';
 
-    WEAPONS.forEach(weapon => {
+    window.WEAPONS.forEach(weapon => {
         const div = document.createElement('div');
         div.className = 'weapon-item';
         
@@ -209,8 +201,8 @@ function renderWeaponList() {
 // 무기 선택
 function selectWeapon(weaponId) {
     gameState.data.currentWeapon = weaponId;
-    const weapon = getWeaponById(weaponId);
-    const stats = calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    const weapon = window.getWeaponById(weaponId);
+    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
     maxAmmo = stats.mag;
     currentAmmo = maxAmmo;
     reloadSpeed = stats.reloadSpeed;
@@ -222,8 +214,8 @@ function selectWeapon(weaponId) {
 
 // 현재 무기 스탯 업데이트
 function updateCurrentWeaponStats() {
-    const weapon = getWeaponById(gameState.data.currentWeapon);
-    const stats = calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    const weapon = window.getWeaponById(gameState.data.currentWeapon);
+    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
     
     const statsDiv = document.getElementById('currentWeaponStats');
     statsDiv.innerHTML = `
@@ -260,13 +252,13 @@ function renderAttachments() {
     const list = document.getElementById('attachmentsList');
     list.innerHTML = '';
 
-    for (let category in ATTACHMENTS) {
+    for (let category in window.ATTACHMENTS) {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'attachment-category';
         
-        categoryDiv.innerHTML = `<div class="category-title">${CATEGORY_NAMES[category]}</div>`;
+        categoryDiv.innerHTML = `<div class="category-title">${window.CATEGORY_NAMES[category]}</div>`;
 
-        ATTACHMENTS[category].forEach(attachment => {
+        window.ATTACHMENTS[category].forEach(attachment => {
             const div = document.createElement('div');
             div.className = 'attachment-item';
             
@@ -319,7 +311,7 @@ function renderAttachments() {
 }
 
 function buyAttachment(attachmentId) {
-    const attachment = getAttachmentById(attachmentId);
+    const attachment = window.getAttachmentById(attachmentId);
     if (!attachment) return;
 
     if (gameState.spendCoins(attachment.price)) {
@@ -335,8 +327,8 @@ function buyAttachment(attachmentId) {
 
 function equipAttachment(category, attachmentId) {
     gameState.data.equippedAttachments[category] = attachmentId;
-    const weapon = getWeaponById(gameState.data.currentWeapon);
-    const stats = calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    const weapon = window.getWeaponById(gameState.data.currentWeapon);
+    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
     maxAmmo = stats.mag;
     currentAmmo = maxAmmo;
     reloadSpeed = stats.reloadSpeed;
@@ -348,8 +340,8 @@ function equipAttachment(category, attachmentId) {
 
 function unequipAttachment(category) {
     gameState.data.equippedAttachments[category] = null;
-    const weapon = getWeaponById(gameState.data.currentWeapon);
-    const stats = calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    const weapon = window.getWeaponById(gameState.data.currentWeapon);
+    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
     maxAmmo = stats.mag;
     currentAmmo = maxAmmo;
     reloadSpeed = stats.reloadSpeed;
@@ -384,7 +376,7 @@ function renderAchievements() {
     const list = document.getElementById('achievementsList');
     list.innerHTML = '';
 
-    ACHIEVEMENTS.forEach(achievement => {
+    window.ACHIEVEMENTS.forEach(achievement => {
         const unlocked = gameState.data.unlockedAchievements.includes(achievement.id);
         const div = document.createElement('div');
         div.className = `achievement-item ${unlocked ? 'unlocked' : 'locked'}`;
@@ -419,7 +411,7 @@ function renderShop() {
     
     // 탄약 상점
     ammoList.innerHTML = '';
-    SHOP_ITEMS.ammo.forEach(item => {
+    window.SHOP_ITEMS.ammo.forEach(item => {
         const div = document.createElement('div');
         div.className = 'shop-item';
         div.innerHTML = `
@@ -435,7 +427,7 @@ function renderShop() {
     
     // 특수 아이템
     specialList.innerHTML = '';
-    SHOP_ITEMS.special.forEach(item => {
+    window.SHOP_ITEMS.special.forEach(item => {
         const div = document.createElement('div');
         div.className = 'shop-item';
         div.innerHTML = `
@@ -451,7 +443,7 @@ function renderShop() {
 }
 
 window.buyShopItem = function(category, itemId) {
-    const item = SHOP_ITEMS[category].find(i => i.id === itemId);
+    const item = window.SHOP_ITEMS[category].find(i => i.id === itemId);
     if (!item) return;
 
     if (gameState.spendCoins(item.price)) {
@@ -545,15 +537,15 @@ function startGame() {
     pauseBtn.style.display = 'inline-block';
     pauseBtn.textContent = '일시정지 (ESC)';
     
-    const weapon = getWeaponById(gameState.data.currentWeapon);
-    const stats = calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    const weapon = window.getWeaponById(gameState.data.currentWeapon);
+    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
     maxAmmo = stats.mag;
     currentAmmo = maxAmmo;
     reloadSpeed = stats.reloadSpeed;
 
     // 훈련 프로그램 또는 게임 모드 설정
-    if (gameState.data.trainingProgram && TRAINING_PROGRAMS[gameState.data.trainingProgram]) {
-        currentSettings = { ...TRAINING_PROGRAMS[gameState.data.trainingProgram].settings };
+    if (gameState.data.trainingProgram && window.TRAINING_PROGRAMS[gameState.data.trainingProgram]) {
+        currentSettings = { ...window.TRAINING_PROGRAMS[gameState.data.trainingProgram].settings };
         timeLeft = currentSettings.duration;
     } else {
         currentSettings = getDefaultSettings();
@@ -612,7 +604,7 @@ function getDefaultSettings() {
 }
 
 function applyDifficulty() {
-    const difficulty = DIFFICULTY_LEVELS[gameState.data.difficulty];
+    const difficulty = window.DIFFICULTY_LEVELS[gameState.data.difficulty];
     if (currentSettings) {
         currentSettings.targetSize *= difficulty.targetSizeMultiplier;
         currentSettings.targetLifetime *= difficulty.targetLifetimeMultiplier;
@@ -632,7 +624,7 @@ function endGame() {
     document.getElementById('pauseBtn').style.display = 'none';
     
     const accuracy = shots > 0 ? Math.round((hits / shots) * 100) : 0;
-    const finalScore = Math.round(score * DIFFICULTY_LEVELS[gameState.data.difficulty].scoreMultiplier);
+    const finalScore = Math.round(score * window.DIFFICULTY_LEVELS[gameState.data.difficulty].scoreMultiplier);
     
     gameState.updateStats({
         score: finalScore,
@@ -677,9 +669,9 @@ function spawnTarget() {
     const y = padding + Math.random() * (canvas.height - padding * 2);
     
     // 특수 타겟 생성 확인
-    const specialType = shouldSpawnSpecialTarget(1.0);
+    const specialType = window.shouldSpawnSpecialTarget(1.0);
     if (specialType && Math.random() < 0.15) { // 15% 확률
-        const specialTarget = new SpecialTarget(specialType, x, y);
+        const specialTarget = new window.SpecialTarget(specialType, x, y);
         targets.push(specialTarget);
         uiManager.showNotification(`⚡ ${specialTarget.config.name} 출현!`, 1500);
     } else {
@@ -896,7 +888,7 @@ function handleSpecialTargetComplete(target, targetIndex) {
     
     // 드롭 처리
     if (Math.random() < target.config.dropChance) {
-        const drop = getRandomDrop(gameState.data.level, gameState.data.ownedAttachments);
+        const drop = window.getRandomDrop(gameState.data.level, gameState.data.ownedAttachments);
         handleDrop(drop);
     }
     
@@ -912,8 +904,8 @@ function handleDrop(drop) {
     } else if (drop.type === 'attachment') {
         // 랜덤 부착물 지급 (아직 소유하지 않은 것 중에서)
         const allAttachments = [];
-        for (let category in ATTACHMENTS) {
-            ATTACHMENTS[category].forEach(att => {
+        for (let category in window.ATTACHMENTS) {
+            window.ATTACHMENTS[category].forEach(att => {
                 if (!gameState.data.ownedAttachments.includes(att.id) && 
                     att.level <= gameState.data.level) {
                     allAttachments.push(att);

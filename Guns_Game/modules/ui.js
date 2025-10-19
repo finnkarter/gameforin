@@ -1,5 +1,5 @@
 // UI 업데이트 관리
-export class UIManager {
+class UIManager {
     constructor(gameState) {
         this.gameState = gameState;
     }
@@ -77,4 +77,7 @@ export class UIManager {
         }, 3000);
     }
 }
+
+// 전역 변수로 노출
+window.UIManager = UIManager;
 

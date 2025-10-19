@@ -1,5 +1,5 @@
 // 부착물 데이터
-export const ATTACHMENTS = {
+const ATTACHMENTS = {
     sights: [
         { id: 'reddot', name: '레드닷 사이트', accuracy: 3, price: 50, level: 2 },
         { id: 'holo', name: '홀로그래픽', accuracy: 5, price: 100, level: 4 },
@@ -21,14 +21,14 @@ export const ATTACHMENTS = {
     ]
 };
 
-export const CATEGORY_NAMES = {
+const CATEGORY_NAMES = {
     sights: '조준경',
     barrel: '총열',
     magazine: '탄창',
     grip: '손잡이'
 };
 
-export function getAttachmentById(id) {
+function getAttachmentById(id) {
     for (let category in ATTACHMENTS) {
         const attachment = ATTACHMENTS[category].find(a => a.id === id);
         if (attachment) return attachment;
@@ -36,7 +36,7 @@ export function getAttachmentById(id) {
     return null;
 }
 
-export function calculateWeaponStats(weapon, equippedAttachments) {
+function calculateWeaponStats(weapon, equippedAttachments) {
     let damage = weapon.damage;
     let accuracy = weapon.accuracy;
     let mag = weapon.mag;
@@ -55,4 +55,10 @@ export function calculateWeaponStats(weapon, equippedAttachments) {
 
     return { damage, accuracy, mag, reloadSpeed };
 }
+
+// 전역 변수로 노출
+window.ATTACHMENTS = ATTACHMENTS;
+window.CATEGORY_NAMES = CATEGORY_NAMES;
+window.getAttachmentById = getAttachmentById;
+window.calculateWeaponStats = calculateWeaponStats;
 

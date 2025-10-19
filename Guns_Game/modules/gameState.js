@@ -1,9 +1,7 @@
 // 게임 상태 관리
-import { checkAchievements } from '../data/achievements.js';
+const LEVEL_XP = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300];
 
-export const LEVEL_XP = [0, 100, 250, 450, 700, 1000, 1350, 1750, 2200, 2700, 3300];
-
-export class GameState {
+class GameState {
     constructor() {
         this.data = {
             // 플레이어 정보
@@ -130,7 +128,7 @@ export class GameState {
             ownedAttachments: this.data.ownedAttachments.length
         };
 
-        const newAchievements = checkAchievements(stats, this.data.unlockedAchievements);
+        const newAchievements = window.checkAchievements(stats, this.data.unlockedAchievements);
         
         newAchievements.forEach(achievement => {
             this.data.unlockedAchievements.push(achievement.id);
@@ -149,4 +147,8 @@ export class GameState {
         this.data = new GameState().data;
     }
 }
+
+// 전역 변수로 노출
+window.LEVEL_XP = LEVEL_XP;
+window.GameState = GameState;
 

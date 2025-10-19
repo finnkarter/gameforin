@@ -1,5 +1,5 @@
 // 렌더링 로직
-export class Renderer {
+class Renderer {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
@@ -220,4 +220,7 @@ export class Renderer {
         ctx.fillText('재장전 중...', this.canvas.width / 2, y - 5);
     }
 }
+
+// 전역 변수로 노출
+window.Renderer = Renderer;
 

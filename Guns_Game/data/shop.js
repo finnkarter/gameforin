@@ -1,5 +1,5 @@
 // 상점 아이템
-export const SHOP_ITEMS = {
+const SHOP_ITEMS = {
     ammo: [
         { id: 'ammo_small', name: '탄약 팩 (소)', amount: 50, price: 20 },
         { id: 'ammo_medium', name: '탄약 팩 (중)', amount: 150, price: 50 },
@@ -13,7 +13,7 @@ export const SHOP_ITEMS = {
     ]
 };
 
-export const DROP_CHANCES = {
+const DROP_CHANCES = {
     common: 0.40,      // 40% - 소량 포인트
     uncommon: 0.30,    // 30% - 중간 포인트
     rare: 0.20,        // 20% - 부착물 or 많은 포인트
@@ -21,7 +21,7 @@ export const DROP_CHANCES = {
     legendary: 0.02    // 2% - 최고급 부착물
 };
 
-export function getRandomDrop(playerLevel, unlockedAttachments) {
+function getRandomDrop(playerLevel, unlockedAttachments) {
     const rand = Math.random();
     let dropType;
     
@@ -79,4 +79,9 @@ function generateDrop(rarity, playerLevel, unlockedAttachments) {
     
     return drops[rarity];
 }
+
+// 전역 변수로 노출
+window.SHOP_ITEMS = SHOP_ITEMS;
+window.DROP_CHANCES = DROP_CHANCES;
+window.getRandomDrop = getRandomDrop;
 

@@ -1,5 +1,5 @@
 // 무기 데이터
-export const WEAPONS = [
+const WEAPONS = [
     { 
         id: 'glock17', 
         name: 'Glock 17', 
@@ -112,11 +112,16 @@ export const WEAPONS = [
     }
 ];
 
-export function getWeaponById(id) {
+function getWeaponById(id) {
     return WEAPONS.find(w => w.id === id);
 }
 
-export function getUnlockedWeapons(level) {
+function getUnlockedWeapons(level) {
     return WEAPONS.filter(w => w.level <= level);
 }
+
+// 전역 변수로 노출
+window.WEAPONS = WEAPONS;
+window.getWeaponById = getWeaponById;
+window.getUnlockedWeapons = getUnlockedWeapons;
 

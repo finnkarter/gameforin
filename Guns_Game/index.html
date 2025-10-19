@@ -222,6 +222,20 @@
     <!-- 알림 -->
     <div class="notification" id="notification"></div>
 
-    <script type="module" src="game.js"></script>
+    <!-- 데이터 파일들 (의존성 순서대로) -->
+    <script src="data/weapons.js"></script>
+    <script src="data/attachments.js"></script>
+    <script src="data/achievements.js"></script>
+    <script src="data/training.js"></script>
+    <script src="data/shop.js"></script>
+    <script src="data/specialTargets.js"></script>
+    
+    <!-- 모듈 파일들 -->
+    <script src="modules/gameState.js"></script>
+    <script src="modules/renderer.js"></script>
+    <script src="modules/ui.js"></script>
+    
+    <!-- 메인 게임 로직 -->
+    <script src="game.js"></script>
 </body>
 </html>

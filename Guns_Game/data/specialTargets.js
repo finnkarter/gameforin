@@ -1,5 +1,5 @@
 // 특수 타겟 정의
-export const SPECIAL_TARGET_TYPES = {
+const SPECIAL_TARGET_TYPES = {
     mozambique: {
         id: 'mozambique',
         name: '모잠비크 타겟',
@@ -49,7 +49,7 @@ export const SPECIAL_TARGET_TYPES = {
     }
 };
 
-export class SpecialTarget {
+class SpecialTarget {
     constructor(type, x, y) {
         this.type = type;
         this.config = SPECIAL_TARGET_TYPES[type];
@@ -115,7 +115,7 @@ export class SpecialTarget {
     }
 }
 
-export function shouldSpawnSpecialTarget(difficulty = 1.0) {
+function shouldSpawnSpecialTarget(difficulty = 1.0) {
     const rand = Math.random();
     
     for (let type in SPECIAL_TARGET_TYPES) {
@@ -127,4 +127,9 @@ export function shouldSpawnSpecialTarget(difficulty = 1.0) {
     
     return null;
 }
+
+// 전역 변수로 노출
+window.SPECIAL_TARGET_TYPES = SPECIAL_TARGET_TYPES;
+window.SpecialTarget = SpecialTarget;
+window.shouldSpawnSpecialTarget = shouldSpawnSpecialTarget;
 

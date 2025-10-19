@@ -1,5 +1,5 @@
 // 훈련 프로그램
-export const TRAINING_PROGRAMS = {
+const TRAINING_PROGRAMS = {
     tracking: {
         name: '추적 훈련',
         description: '움직이는 타겟 추적',
@@ -77,7 +77,7 @@ export const TRAINING_PROGRAMS = {
     }
 };
 
-export const DIFFICULTY_LEVELS = {
+const DIFFICULTY_LEVELS = {
     easy: {
         name: '쉬움',
         targetSizeMultiplier: 1.3,
@@ -107,4 +107,8 @@ export const DIFFICULTY_LEVELS = {
         scoreMultiplier: 2.0
     }
 };
+
+// 전역 변수로 노출
+window.TRAINING_PROGRAMS = TRAINING_PROGRAMS;
+window.DIFFICULTY_LEVELS = DIFFICULTY_LEVELS;
 
