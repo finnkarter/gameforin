@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작업 도구</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 좌측 패널 -->
+        <div class="left-panel">
+            <div class="panel-title">도구 선택</div>
+            
+            <!-- 난이도 선택 -->
+            <div class="section-header">난이도</div>
+            <div id="difficultySelector" class="difficulty-selector"></div>
+            
+            <!-- 게임 모드 -->
+            <div class="section-header">기본 모드</div>
+            <div class="mode-selector">
+                <button class="mode-btn active" data-mode="classic">모드 1</button>
+                <button class="mode-btn" data-mode="precision">모드 2</button>
+                <button class="mode-btn" data-mode="speed">모드 3</button>
+            </div>
+            
+            <!-- 훈련 프로그램 -->
+            <div class="section-header">훈련 프로그램</div>
+            <div id="trainingList" class="training-list"></div>
+            
+            <!-- 무기 목록 -->
+            <div class="section-header">도구 목록</div>
+            <div id="weaponList"></div>
+        </div>
+
+        <!-- 중앙 패널 -->
+        <div class="center-panel">
+            <div class="game-header">
+                <div class="game-title">작업 연습 도구</div>
+                <div class="hud">
+                    <div class="hud-item">
+                        <div class="hud-label">점수</div>
+                        <div class="hud-value" id="scoreDisplay">0</div>
+                    </div>
+                    <div class="hud-item">
+                        <div class="hud-label">시간</div>
+                        <div class="hud-value" id="timeDisplay">60</div>
+                    </div>
+                    <div class="hud-item">
+                        <div class="hud-label">탄약</div>
+                        <div class="hud-value" id="ammoDisplay">17/17</div>
+                    </div>
+                    <div class="hud-item">
+                        <div class="hud-label">정확도</div>
+                        <div class="hud-value" id="accuracyDisplay">0%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-canvas-container">
+                <canvas id="gameCanvas" width="1000" height="600"></canvas>
+                
+                <!-- 일시정지 오버레이 -->
+                <div class="pause-overlay" id="pauseOverlay">
+                    <div class="pause-content">
+                        <div class="pause-title">일시정지</div>
+                        <div class="pause-message">게임이 일시정지되었습니다</div>
+                        <button class="btn" id="resumeBtn">계속하기</button>
+                        <div class="pause-hint">ESC 또는 스페이스바를 눌러 재개</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="game-controls">
+                <button class="btn" id="startBtn">시작</button>
+                <button class="btn" id="pauseBtn" style="display: none;">일시정지 (ESC)</button>
+                <button class="btn secondary" id="reloadBtn">재장전 (R)</button>
+                <button class="btn secondary" id="shopBtn">상점</button>
+                <button class="btn secondary" id="attachmentsBtn">업그레이드</button>
+                <button class="btn secondary" id="achievementsBtn">업적</button>
+                <button class="btn secondary" id="settingsBtn">설정</button>
+                <button class="btn secondary" id="resetBtn">초기화</button>
+            </div>
+        </div>
+
+        <!-- 우측 패널 -->
+        <div class="right-panel">
+            <div class="panel-title">통계</div>
+            
+            <div class="coins-display">
+                <div class="coins-amount" id="coinsAmount">0</div>
+                <div class="coins-label">포인트</div>
+            </div>
+
+            <div class="stat-section">
+                <div class="stat-title">사용자 정보</div>
+                <div class="stat-item">
+                    <span class="stat-label">레벨</span>
+                    <span class="stat-value" id="levelDisplay">1</span>
+                </div>
+                <div class="level-bar-container">
+                    <div class="level-bar">
+                        <div class="level-bar-fill" id="xpBar" style="width: 0%">
+                            <span id="xpText">0 / 100</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-section">
+                <div class="stat-title">현재 세션</div>
+                <div class="stat-item">
+                    <span class="stat-label">명중</span>
+                    <span class="stat-value" id="hitsDisplay">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">정확</span>
+                    <span class="stat-value" id="headshotsDisplay">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">연속</span>
+                    <span class="stat-value" id="comboDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="stat-section">
+                <div class="stat-title">최고 기록</div>
+                <div class="stat-item">
+                    <span class="stat-label">최고 점수</span>
+                    <span class="stat-value" id="highScoreDisplay">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">최고 정확도</span>
+                    <span class="stat-value" id="bestAccuracyDisplay">0%</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">최고 연속</span>
+                    <span class="stat-value" id="bestComboDisplay">0</span>
+                </div>
+            </div>
+
+            <div class="stat-section">
+                <div class="stat-title">현재 도구</div>
+                <div id="currentWeaponStats"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 업그레이드 모달 -->
+    <div class="modal" id="attachmentsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">업그레이드 상점</div>
+                <button class="close-btn" id="closeModal">&times;</button>
+            </div>
+            <div id="attachmentsList"></div>
+        </div>
+    </div>
+
+    <!-- 업적 모달 -->
+    <div class="modal" id="achievementsModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div class="modal-title">업적</div>
+                <button class="close-btn" id="closeAchievementsModal">&times;</button>
+            </div>
+            <div id="achievementsList" class="achievements-grid"></div>
+        </div>
+    </div>
+
+    <!-- 상점 모달 -->
+    <div class="modal" id="shopModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <div class="modal-title">상점</div>
+                <button class="close-btn" id="closeShopModal">&times;</button>
+            </div>
+            <div class="shop-content">
+                <div class="shop-section">
+                    <div class="shop-section-title">탄약</div>
+                    <div id="ammoShopList" class="shop-list"></div>
+                </div>
+                <div class="shop-section">
+                    <div class="shop-section-title">특수 아이템</div>
+                    <div id="specialShopList" class="shop-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 설정 모달 -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">설정</div>
+                <button class="close-btn" id="closeSettingsModal">&times;</button>
+            </div>
+            <div class="settings-content">
+                <div class="setting-group">
+                    <label class="setting-label">크로스헤어 스타일</label>
+                    <select id="crosshairStyle" class="setting-select">
+                        <option value="default">기본</option>
+                        <option value="dot">점</option>
+                        <option value="cross">십자</option>
+                        <option value="circle">원형</option>
+                    </select>
+                </div>
+                
+                <div class="setting-group">
+                    <label class="setting-label">크로스헤어 색상</label>
+                    <select id="crosshairColor" class="setting-select">
+                        <option value="#888">회색</option>
+                        <option value="#fff">흰색</option>
+                        <option value="#aaa">밝은 회색</option>
+                        <option value="#666">어두운 회색</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 알림 -->
+    <div class="notification" id="notification"></div>
+
+    <script type="module" src="game.js"></script>
+</body>
+</html>
