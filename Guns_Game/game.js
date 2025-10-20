@@ -319,7 +319,7 @@ function buyAttachment(attachmentId) {
         uiManager.showNotification(`${attachment.name} 구매 완료`);
         uiManager.updateAll();
         renderAttachments();
-        checkAchievements();
+        checkAndNotifyAchievements();
     } else {
         uiManager.showNotification('포인트가 부족합니다');
     }
@@ -351,8 +351,8 @@ function unequipAttachment(category) {
     gameState.save();
 }
 
-// 업적 확인
-function checkAchievements() {
+// 업적 확인 및 알림
+function checkAndNotifyAchievements() {
     const newAchievements = gameState.checkAndUnlockAchievements();
     newAchievements.forEach(achievement => {
         setTimeout(() => {
@@ -635,7 +635,7 @@ function endGame() {
         combo: maxCombo
     });
 
-    checkAchievements();
+    checkAndNotifyAchievements();
     uiManager.updateAll();
     
     uiManager.showNotification(`완료! 점수: ${finalScore} | 명중률: ${accuracy}%`, 3000);
@@ -849,7 +849,7 @@ function handleCanvasClick(e) {
 
     updateGameDisplay();
     updateSessionStats();
-    checkAchievements();
+    checkAndNotifyAchievements();
 }
 
 // 특수 타겟 히트 체크
@@ -927,7 +927,7 @@ function handleDrop(drop) {
     
     updateGameDisplay();
     updateSessionStats();
-    checkAchievements();
+    checkAndNotifyAchievements();
 }
 
 // 디스플레이 업데이트
