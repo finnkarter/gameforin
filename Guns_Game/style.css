@@ -834,3 +834,359 @@ body {
         height: 480px;
     }
 }
+
+@media (max-width: 900px) {
+    .left-panel, .right-panel {
+        width: 200px;
+        padding: 10px;
+    }
+    
+    #gameCanvas {
+        width: 600px;
+        height: 360px;
+    }
+    
+    .game-header {
+        padding: 10px 15px;
+    }
+    
+    .panel-title {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .left-panel, .right-panel {
+        width: 100%;
+        height: auto;
+        max-height: 150px;
+        border: none;
+        border-bottom: 1px solid #333;
+    }
+    
+    .right-panel {
+        border-bottom: none;
+        border-top: 1px solid #333;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 500px;
+        height: auto;
+        max-height: 300px;
+    }
+    
+    .game-header {
+        padding: 8px 12px;
+    }
+    
+    .game-title {
+        font-size: 16px;
+    }
+    
+    .hud {
+        gap: 15px;
+    }
+    
+    .hud-label {
+        font-size: 9px;
+    }
+    
+    .hud-value {
+        font-size: 14px;
+    }
+    
+    .game-controls {
+        padding: 10px 15px;
+        gap: 8px;
+    }
+    
+    .btn {
+        padding: 8px 16px;
+        font-size: 12px;
+    }
+    
+    .btn.secondary {
+        padding: 8px 12px;
+        font-size: 11px;
+    }
+}
+
+/* 매우 작은 화면 (500x200px 정도) */
+@media (max-width: 550px), (max-height: 250px) {
+    body {
+        font-size: 12px;
+    }
+    
+    .container {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .left-panel {
+        width: 100%;
+        max-height: 85px;
+        padding: 5px 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-right: none;
+        border-bottom: 1px solid #333;
+        display: flex;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .left-panel > div {
+        flex-shrink: 0;
+    }
+    
+    .panel-title {
+        font-size: 10px;
+        margin-bottom: 5px;
+        display: none;
+    }
+    
+    .section-header {
+        font-size: 8px;
+        margin: 0;
+        margin-bottom: 4px;
+        white-space: nowrap;
+    }
+    
+    .difficulty-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .difficulty-btn {
+        padding: 4px 8px;
+        font-size: 8px;
+        white-space: nowrap;
+    }
+    
+    .mode-selector {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .mode-btn {
+        padding: 4px 8px;
+        font-size: 8px;
+        white-space: nowrap;
+    }
+    
+    .training-list {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-height: 75px;
+        overflow-y: auto;
+    }
+    
+    #weaponList {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        max-height: 75px;
+        overflow-y: auto;
+    }
+    
+    .training-item, .weapon-item {
+        padding: 4px 6px;
+        margin-bottom: 0;
+        min-width: 120px;
+        display: flex;
+        gap: 6px;
+        align-items: center;
+    }
+    
+    .training-icon {
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    .training-info, .weapon-item > div {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .training-name, .weapon-name {
+        font-size: 9px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .training-desc, .weapon-stats {
+        font-size: 7px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .weapon-level-req {
+        font-size: 7px;
+    }
+    
+    .right-panel {
+        width: 100%;
+        max-height: 60px;
+        padding: 5px 8px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        border-left: none;
+        border-top: 1px solid #333;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .right-panel .panel-title {
+        display: none;
+    }
+    
+    .coins-display {
+        padding: 5px 8px;
+        margin-bottom: 0;
+        min-width: 80px;
+    }
+    
+    .coins-amount {
+        font-size: 16px;
+    }
+    
+    .coins-label {
+        font-size: 8px;
+    }
+    
+    .stat-section {
+        margin-bottom: 0;
+        display: inline-block;
+        min-width: 100px;
+    }
+    
+    .stat-title {
+        font-size: 10px;
+        margin-bottom: 3px;
+    }
+    
+    .stat-item {
+        padding: 2px 0;
+        font-size: 9px;
+    }
+    
+    .stat-label {
+        font-size: 9px;
+    }
+    
+    .stat-value {
+        font-size: 10px;
+    }
+    
+    .level-bar-container {
+        display: none;
+    }
+    
+    .center-panel {
+        width: 100%;
+        flex: 1;
+    }
+    
+    .game-header {
+        padding: 3px 8px;
+    }
+    
+    .game-title {
+        font-size: 11px;
+    }
+    
+    .hud {
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    
+    .hud-item {
+        min-width: 45px;
+    }
+    
+    .hud-label {
+        font-size: 7px;
+    }
+    
+    .hud-value {
+        font-size: 10px;
+    }
+    
+    .game-canvas-container {
+        padding: 5px;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        max-width: 480px;
+        height: 140px;
+    }
+    
+    .game-controls {
+        padding: 3px 5px;
+        gap: 3px;
+    }
+    
+    .btn {
+        padding: 4px 8px;
+        font-size: 9px;
+    }
+    
+    .btn.secondary {
+        padding: 3px 6px;
+        font-size: 8px;
+    }
+    
+    .pause-content {
+        padding: 15px;
+    }
+    
+    .pause-title {
+        font-size: 18px;
+    }
+    
+    .pause-message {
+        font-size: 11px;
+        margin-bottom: 12px;
+    }
+    
+    .pause-hint {
+        font-size: 10px;
+    }
+    
+    .modal-content {
+        padding: 12px;
+        max-width: 95%;
+        max-height: 90vh;
+    }
+    
+    .modal-title {
+        font-size: 13px;
+    }
+    
+    .notification {
+        padding: 8px 15px;
+        font-size: 11px;
+        max-width: 90%;
+    }
+    
+    .attachment-item, .achievement-item, .shop-item {
+        padding: 8px;
+        font-size: 10px;
+    }
+    
+    .category-title, .shop-section-title {
+        font-size: 11px;
+    }
+}
