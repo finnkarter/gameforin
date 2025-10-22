@@ -668,48 +668,35 @@ function spawnTarget() {
     const x = padding + Math.random() * (canvas.width - padding * 2);
     const y = padding + Math.random() * (canvas.height - padding * 2);
     
-    // 특수 타겟 생성 확인 (5% 확률 new!)
+    // 특수 타겟 생성 확인
     const specialType = window.shouldSpawnSpecialTarget(1.0);
-    if (specialType && Math.random() < 0.05) {
+    if (specialType && Math.random() < 0.15) { // 15% 확률
         const specialTarget = new window.SpecialTarget(specialType, x, y);
         targets.push(specialTarget);
         uiManager.showNotification(`⚡ ${specialTarget.config.name} 출현!`, 1500);
     } else {
-        // 타르코프 스타일 타겟 생성 (85% 확률)
-        if (Math.random() < 0.85) {
-            const tarkovTarget = window.spawnRandomTarget(x, y, currentSettings);
-            targets.push(tarkovTarget);
-            
-            // 보스 출현시 알림
-            if (tarkovTarget.config.id === 'boss') {
-                uiManager.showNotification(`🔥 보스 출현!`, 2000);
-            } else if (tarkovTarget.config.id === 'pmc') {
-                uiManager.showNotification(`⚠️ PMC 발견!`, 1000);
-            }
-        } else {
-            // 기존 일반 타겟 (10% 확률)
-            const size = currentSettings.randomSize 
-                ? currentSettings.targetSize * (0.7 + Math.random() * 0.6)
-                : currentSettings.targetSize;
+        // 일반 타겟
+        const size = currentSettings.randomSize 
+            ? currentSettings.targetSize * (0.7 + Math.random() * 0.6)
+            : currentSettings.targetSize;
 
-            const target = {
-                x, y, size,
-                createdAt: Date.now(),
-                lifetime: currentSettings.targetLifetime,
-                isSpecial: false
+        const target = {
+            x, y, size,
+            createdAt: Date.now(),
+            lifetime: currentSettings.targetLifetime,
+            isSpecial: false
+        };
+
+        if (currentSettings.movingTargets) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = currentSettings.targetSpeed || 1;
+            target.velocity = {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed
             };
+        }
 
-            if (currentSettings.movingTargets) {
-                const angle = Math.random() * Math.PI * 2;
-                const speed = currentSettings.targetSpeed || 1;
-                target.velocity = {
-                    x: Math.cos(angle) * speed,
-                    y: Math.sin(angle) * speed
-                };
-            }
-
-            targets.push(target);
-        } //end of new fix
+        targets.push(target);
     }
 
     const nextDelay = currentSettings.spawnDelay || 1500;
@@ -720,13 +707,6 @@ function spawnTarget() {
 function updateTargets() {
     const now = Date.now();
     targets = targets.filter(target => {
-        // 타르코프 타겟인지 확인(new!)
-        if (target.update && typeof target.update === 'function') {
-            target.update(16, canvas.width, canvas.height); // 16ms delta time
-            return !target.shouldDespawn();
-        } // end of new!
-        
-        // 기존 타겟 처리
         const age = now - target.createdAt;
         if (age > target.lifetime) {
             combo = 0;
@@ -808,59 +788,8 @@ function handleCanvasClick(e) {
     for (let i = targets.length - 1; i >= 0; i--) {
         const target = targets[i];
         
-        // 타르코프 타겟 처리 new!
-        if (target.config && target.config.id) {
-            const dist = Math.sqrt((clickX - target.x) ** 2 + (clickY - target.y) ** 2);
-            
-            if (dist <= target.size) {
-                hit = true;
-                
-                // 헤드샷 체크 (내부 원)
-                isHeadshot = dist <= target.size * 0.3;
-                
-                // 무기 데미지 계산
-                const weapon = window.getWeaponById(gameState.data.currentWeapon);
-                const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
-                const damage = stats.damage;
-                
-                // 타겟에 데미지 적용
-                const killed = target.hit(damage, isHeadshot);
-                
-                if (killed) {
-                    // 타겟 처치 완료
-                    hits++;
-                    combo++;
-                    if (combo > maxCombo) maxCombo = combo;
-                    if (isHeadshot) headshots++;
-                    
-                    // 보상 적용
-                    const reward = target.config.reward;
-                    hitScore = reward.points;
-                    gameState.addXP(reward.xp);
-                    gameState.addCoins(reward.coins);
-                    
-                    // 콤보 보너스
-                    if (combo > 1) {
-                        const comboBonus = combo * 2;
-                        hitScore += comboBonus;
-                        gameState.addXP(comboBonus);
-                    }
-                    
-                    targets.splice(i, 1);
-                    uiManager.showNotification(`${target.config.name} 처치! +${hitScore}점`, 1000);
-                } else {
-                    // 타겟이 아직 살아있음
-                    hitScore = 5; // 히트 점수
-                    gameState.addXP(2);
-                    uiManager.showNotification(`히트! HP: ${Math.ceil(target.health)}`, 500);
-                }
-                
-                renderer.createHitEffect(clickX, clickY, isHeadshot);
-                break;
-            }
-        } // end of new!
-        // 특수 타겟 처리 new fix
-        else if (target.isSpecial && target.config) {
+        // 특수 타겟 처리
+        if (target.isSpecial && target.config) {
             const hitResult = checkSpecialTargetHit(target, clickX, clickY);
             if (hitResult.hit) {
                 hit = true;

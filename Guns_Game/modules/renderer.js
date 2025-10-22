@@ -13,12 +13,6 @@ class Renderer {
         const alpha = 1 - ageRatio * 0.3;
         const ctx = this.ctx;
         
-        // 타르코프 스타일 타겟인지 확인(new!)
-        if (target.config && target.config.id) {
-            this.drawTarkovTarget(target, alpha);
-            return;
-        }
-        
         // 특수 타겟인지 확인
         if (target.isSpecial && target.config) {
             this.drawSpecialTarget(target, alpha);
@@ -58,93 +52,6 @@ class Renderer {
             ctx.setLineDash([]);
         }
     }
-
-//new!
-
-    drawTarkovTarget(target, alpha) {
-        const ctx = this.ctx;
-        const x = target.x;
-        const y = target.y;
-        const size = target.size;
-        const config = target.config;
-        
-        // 체력에 따른 알파값 조정
-        const healthPercent = target.getHealthPercentage();
-        const targetAlpha = alpha * (0.3 + healthPercent * 0.7);
-        
-        // 타겟 타입별 색상
-        const baseColor = config.color;
-        const borderColor = config.borderColor;
-        
-        ctx.save();
-        
-        // 보스는 글로우 효과
-        if (config.id === 'boss') {
-            ctx.shadowColor = 'rgba(255, 200, 100, 0.5)';
-            ctx.shadowBlur = 10;
-        }
-        
-        // 메인 원
-        ctx.beginPath();
-        ctx.arc(x, y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `${baseColor}${Math.floor(targetAlpha * 255).toString(16).padStart(2, '0')}`;
-        ctx.fill();
-        ctx.strokeStyle = `${borderColor}${Math.floor(targetAlpha * 255).toString(16).padStart(2, '0')}`;
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        
-        // 내부 원 (헤드샷 존)
-        ctx.beginPath();
-        ctx.arc(x, y, size * 0.3, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(200, 100, 100, ${targetAlpha})`;
-        ctx.fill();
-        
-        // 타겟 타입 표시
-        ctx.fillStyle = `rgba(255, 255, 255, ${targetAlpha})`;
-        ctx.font = `${size * 0.3}px Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        let displayText = '';
-        switch (config.id) {
-            case 'scav': displayText = 'S'; break;
-            case 'pmc': displayText = 'P'; break;
-            case 'boss': displayText = 'B'; break;
-        }
-        ctx.fillText(displayText, x, y);
-        
-        // 체력바
-        if (healthPercent < 1.0) {
-            const barWidth = size * 1.5;
-            const barHeight = 4;
-            const barX = x - barWidth / 2;
-            const barY = y - size - 15;
-            
-            // 배경
-            ctx.fillStyle = `rgba(100, 100, 100, ${targetAlpha})`;
-            ctx.fillRect(barX, barY, barWidth, barHeight);
-            
-            // 체력
-            ctx.fillStyle = healthPercent > 0.3 ? 
-                `rgba(100, 200, 100, ${targetAlpha})` : 
-                `rgba(200, 100, 100, ${targetAlpha})`;
-            ctx.fillRect(barX, barY, barWidth * healthPercent, barHeight);
-        }
-        
-        // 움직이는 타겟 표시
-        if (target.velocity) {
-            ctx.strokeStyle = `rgba(255, 255, 100, ${targetAlpha * 0.6})`;
-            ctx.lineWidth = 2;
-            ctx.setLineDash([4, 4]);
-            ctx.beginPath();
-            ctx.arc(x, y, size + 8, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-        
-        ctx.restore();
-    }
-//end of new!
 
     drawSpecialTarget(target, alpha) {
         const ctx = this.ctx;
