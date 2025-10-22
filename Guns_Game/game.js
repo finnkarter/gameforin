@@ -173,69 +173,186 @@ function renderWeaponList() {
         const div = document.createElement('div');
         div.className = 'weapon-item';
         
-        if (weapon.level > gameState.data.level) {
+        const owned = gameState.data.ownedWeapons.includes(weapon.id);
+        const levelUnlocked = weapon.level <= gameState.data.level;
+        const affordable = gameState.data.coins >= weapon.price;
+        
+        // 레벨 잠금
+        if (!levelUnlocked) {
             div.classList.add('locked');
         }
         
+        // 소유하지 않은 무기
+        if (!owned && levelUnlocked) {
+            div.classList.add('unowned');
+        }
+        
+        // 현재 선택된 무기
         if (weapon.id === gameState.data.currentWeapon) {
             div.classList.add('active');
         }
 
         div.innerHTML = `
-            <div class="weapon-name">${weapon.name}</div>
-            <div class="weapon-stats">
-                ${weapon.type} | DMG: ${weapon.damage} | ACC: ${weapon.accuracy}%<br>
-                탄창: ${weapon.mag}발
+            <div class="weapon-header">
+                <div class="weapon-name">${weapon.name}</div>
+                ${owned ? '<div class="weapon-owned">✓ 소유</div>' : ''}
             </div>
-            ${weapon.level > gameState.data.level ? `<div class="weapon-level-req">레벨 ${weapon.level} 필요</div>` : ''}
+            <div class="weapon-stats">
+                ${weapon.type} | ${weapon.caliber}<br>
+                DMG: ${weapon.damage} | ACC: ${weapon.accuracy}% | MAG: ${weapon.mag}발
+            </div>
+            <div class="weapon-description">${weapon.description}</div>
+            ${!levelUnlocked ? `<div class="weapon-level-req">레벨 ${weapon.level} 필요</div>` : 
+              !owned ? `<div class="weapon-price ${affordable ? '' : 'unaffordable'}">${weapon.price} 코인</div>` : ''}
+            ${levelUnlocked && !owned ? `
+                <button class="weapon-buy-btn ${affordable ? '' : 'disabled'}" 
+                    onclick="buyWeapon('${weapon.id}')" 
+                    ${!affordable ? 'disabled' : ''}>
+                    ${affordable ? '구매' : '코인 부족'}
+                </button>
+            ` : ''}
         `;
 
-        if (weapon.level <= gameState.data.level) {
+        // 소유한 무기만 선택 가능
+        if (owned) {
             div.onclick = () => selectWeapon(weapon.id);
+            div.style.cursor = 'pointer';
         }
 
         list.appendChild(div);
     });
 }
 
+// 무기 구매
+function buyWeapon(weaponId) {
+    const weapon = window.getWeaponById(weaponId);
+    if (!weapon) return;
+    
+    // 레벨 체크
+    if (weapon.level > gameState.data.level) {
+        uiManager.showNotification(`레벨 ${weapon.level}이 필요합니다.`);
+        return;
+    }
+    
+    // 이미 소유한 무기인지 체크
+    if (gameState.data.ownedWeapons.includes(weaponId)) {
+        uiManager.showNotification('이미 소유한 무기입니다.');
+        return;
+    }
+    
+    // 코인 체크 및 구매
+    if (gameState.spendCoins(weapon.price)) {
+        gameState.data.ownedWeapons.push(weaponId);
+        uiManager.showNotification(`${weapon.name} 구매 완료!`);
+        renderWeaponList();
+        uiManager.updateAll();
+        checkAndNotifyAchievements();
+        gameState.save();
+        
+        // 구매 후 자동 선택
+        selectWeapon(weaponId);
+    } else {
+        uiManager.showNotification('코인이 부족합니다.');
+    }
+}
+
 // 무기 선택
 function selectWeapon(weaponId) {
+    // 소유한 무기인지 체크
+    if (!gameState.data.ownedWeapons.includes(weaponId)) {
+        uiManager.showNotification('소유하지 않은 무기입니다.');
+        return;
+    }
+    
     gameState.data.currentWeapon = weaponId;
     const weapon = window.getWeaponById(weaponId);
-    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    
+    // 해당 무기의 부착물 설정 가져오기
+    const weaponAttachments = gameState.data.equippedAttachments[weaponId] || {};
+    const stats = window.calculateWeaponStats(weapon, weaponAttachments);
+    
     maxAmmo = stats.mag;
     currentAmmo = maxAmmo;
     reloadSpeed = stats.reloadSpeed;
+    
     renderWeaponList();
     updateCurrentWeaponStats();
     updateAmmoDisplay();
     gameState.save();
+    
+    uiManager.showNotification(`${weapon.name} 선택됨`);
 }
+
+// 전역 함수로 노출
+window.buyWeapon = buyWeapon;
 
 // 현재 무기 스탯 업데이트
 function updateCurrentWeaponStats() {
     const weapon = window.getWeaponById(gameState.data.currentWeapon);
-    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
+    if (!weapon) return;
+    
+    const equippedAttachments = gameState.data.equippedAttachments[weapon.id] || {};
+    const stats = window.calculateWeaponStats(weapon, equippedAttachments);
     
     const statsDiv = document.getElementById('currentWeaponStats');
-    statsDiv.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-label">무기</span>
-            <span class="stat-value">${weapon.name}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">데미지</span>
-            <span class="stat-value">${stats.damage}</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">정확도</span>
-            <span class="stat-value">${stats.accuracy}%</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">탄창</span>
-            <span class="stat-value">${stats.mag}</span>
-        </div>
-    `;
+    if (statsDiv) {
+        statsDiv.innerHTML = `
+            <div class="weapon-header">
+                <h3>${weapon.name}</h3>
+                <span class="weapon-caliber">${weapon.caliber}</span>
+            </div>
+            <div class="weapon-stats">
+                <div class="stat-bar">
+                    <span class="stat-label">데미지</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" id="damageBar" style="width: ${Math.min(100, (stats.damage / 150) * 100)}%"></div>
+                    </div>
+                    <span class="stat-value">${stats.damage}</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">정확도</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" id="accuracyBar" style="width: ${stats.accuracy}%"></div>
+                    </div>
+                    <span class="stat-value">${stats.accuracy}</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">반동 제어</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" id="recoilBar" style="width: ${Math.max(0, 100 - (stats.recoil - 50))}%"></div>
+                    </div>
+                    <span class="stat-value">${Math.round(stats.recoil)}</span>
+                </div>
+                <div class="stat-bar">
+                    <span class="stat-label">인체공학</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" id="ergoBar" style="width: ${weapon.ergonomics || 50}%"></div>
+                    </div>
+                    <span class="stat-value">${weapon.ergonomics || 50}</span>
+                </div>
+                ${stats.stealth > 0 ? `
+                <div class="stat-bar">
+                    <span class="stat-label">은밀성</span>
+                    <div class="stat-bar-bg">
+                        <div class="stat-bar-fill" id="stealthBar" style="width: ${stats.stealth}%"></div>
+                    </div>
+                    <span class="stat-value">${stats.stealth}</span>
+                </div>
+                ` : ''}
+                <div class="stat-item">
+                    <span class="stat-label">탄창 용량</span>
+                    <span class="stat-value">${stats.mag}발</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">재장전 시간</span>
+                    <span class="stat-value">${stats.reloadSpeed.toFixed(1)}초</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // UI 매니저를 통한 업데이트
+    uiManager.updateCurrentWeaponStats();
 }
 
 // 부착물 모달
@@ -250,64 +367,101 @@ function closeAttachmentsModal() {
 
 function renderAttachments() {
     const list = document.getElementById('attachmentsList');
+    const weapon = window.getWeaponById(gameState.data.currentWeapon);
+    if (!weapon || !list) return;
+    
+    // 소유한 무기인지 체크
+    if (!gameState.data.ownedWeapons.includes(gameState.data.currentWeapon)) {
+        list.innerHTML = '<div class="no-attachments">무기를 먼저 구매해주세요.</div>';
+        return;
+    }
+
     list.innerHTML = '';
 
-    for (let category in window.ATTACHMENTS) {
+    // 무기별 사용 가능한 슬롯만 표시
+    const availableSlots = window.getAvailableSlots(weapon);
+    
+    availableSlots.forEach(category => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'attachment-category';
         
-        categoryDiv.innerHTML = `<div class="category-title">${window.CATEGORY_NAMES[category]}</div>`;
+        categoryDiv.innerHTML = `
+            <div class="category-title">
+                ${window.CATEGORY_NAMES[category]}
+                <span class="category-info">${weapon.name} 호환</span>
+            </div>
+        `;
 
-        window.ATTACHMENTS[category].forEach(attachment => {
+        // 호환 가능한 부착물만 필터링
+        const compatibleAttachments = window.getCompatibleAttachments(weapon, category);
+        
+        compatibleAttachments.forEach(attachment => {
             const div = document.createElement('div');
             div.className = 'attachment-item';
             
             const owned = gameState.data.ownedAttachments.includes(attachment.id);
-            const equipped = gameState.data.equippedAttachments[category] === attachment.id;
+            const currentWeaponAttachments = gameState.data.equippedAttachments[weapon.id] || {};
+            const equipped = currentWeaponAttachments[category] === attachment.id;
             
             if (owned) div.classList.add('owned');
             if (equipped) div.classList.add('equipped');
 
+            // 효과 표시 개선
             let effects = [];
-            if (attachment.accuracy) effects.push(`정확도 +${attachment.accuracy}%`);
+            if (attachment.accuracy) effects.push(`정확도 +${attachment.accuracy}`);
             if (attachment.damage) effects.push(`데미지 ${attachment.damage > 0 ? '+' : ''}${attachment.damage}`);
+            if (attachment.recoil) effects.push(`반동 ${attachment.recoil}`);
             if (attachment.magBonus) effects.push(`탄창 +${attachment.magBonus}%`);
             if (attachment.reloadBonus) effects.push(`재장전 +${attachment.reloadBonus}%`);
+            if (attachment.stealth) effects.push(`은밀성 +${attachment.stealth}`);
 
             const locked = attachment.level > gameState.data.level;
+            const affordable = gameState.data.coins >= attachment.price;
 
             div.innerHTML = `
                 <div class="attachment-info">
                     <div class="attachment-name">${attachment.name}</div>
                     <div class="attachment-effects">${effects.join(', ')}</div>
-                    ${locked ? `<div style="color: #666; font-size: 10px;">레벨 ${attachment.level} 필요</div>` : ''}
+                    ${attachment.caliber ? `<div class="attachment-caliber">탄종: ${attachment.caliber}</div>` : ''}
+                    ${locked ? `<div class="attachment-locked">레벨 ${attachment.level} 필요</div>` : ''}
                 </div>
-                ${!locked ? `
-                    ${!owned ? `<div class="attachment-price">${attachment.price}</div>` : ''}
-                    <button class="btn-small ${equipped ? 'equipped' : ''}" 
-                        data-action="${owned ? (equipped ? 'unequip' : 'equip') : 'buy'}"
-                        data-category="${category}"
-                        data-id="${attachment.id}">
-                        ${owned ? (equipped ? '해제' : '장착') : '구매'}
-                    </button>
-                ` : ''}
+                <div class="attachment-actions">
+                    ${!locked ? `
+                        ${!owned ? `<div class="attachment-price ${affordable ? '' : 'unaffordable'}">${attachment.price} 코인</div>` : ''}
+                        <button class="btn-small ${equipped ? 'equipped' : ''} ${!affordable && !owned ? 'disabled' : ''}" 
+                            data-action="${owned ? (equipped ? 'unequip' : 'equip') : 'buy'}"
+                            data-category="${category}"
+                            data-id="${attachment.id}"
+                            ${!affordable && !owned ? 'disabled' : ''}>
+                            ${owned ? (equipped ? '해제' : '장착') : '구매'}
+                        </button>
+                    ` : '<div class="attachment-locked-btn">잠김</div>'}
+                </div>
             `;
 
             const btn = div.querySelector('.btn-small');
-            if (btn) {
+            if (btn && !btn.disabled) {
                 btn.onclick = () => {
                     const action = btn.dataset.action;
                     if (action === 'buy') buyAttachment(attachment.id);
-                    else if (action === 'equip') equipAttachment(category, attachment.id);
-                    else if (action === 'unequip') unequipAttachment(category);
+                    else if (action === 'equip') equipAttachment(weapon.id, category, attachment.id);
+                    else if (action === 'unequip') unequipAttachment(weapon.id, category);
                 };
             }
 
             categoryDiv.appendChild(div);
         });
 
+        // 호환 부착물이 없는 경우
+        if (compatibleAttachments.length === 0) {
+            const noItemsDiv = document.createElement('div');
+            noItemsDiv.className = 'no-attachments';
+            noItemsDiv.textContent = '이 무기와 호환되는 부착물이 없습니다.';
+            categoryDiv.appendChild(noItemsDiv);
+        }
+
         list.appendChild(categoryDiv);
-    }
+    });
 }
 
 function buyAttachment(attachmentId) {
@@ -325,31 +479,77 @@ function buyAttachment(attachmentId) {
     }
 }
 
-function equipAttachment(category, attachmentId) {
-    gameState.data.equippedAttachments[category] = attachmentId;
-    const weapon = window.getWeaponById(gameState.data.currentWeapon);
-    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
-    maxAmmo = stats.mag;
-    currentAmmo = maxAmmo;
-    reloadSpeed = stats.reloadSpeed;
+function equipAttachment(weaponId, category, attachmentId) {
+    // 무기별 부착물 저장 구조로 변경
+    if (!gameState.data.equippedAttachments[weaponId]) {
+        gameState.data.equippedAttachments[weaponId] = {};
+    }
+    
+    const attachment = window.getAttachmentById(attachmentId);
+    const weapon = window.getWeaponById(weaponId);
+    
+    // 호환성 체크
+    if (!window.isAttachmentCompatible(weapon, attachment)) {
+        uiManager.showNotification('이 부착물은 해당 무기와 호환되지 않습니다.');
+        return;
+    }
+    
+    gameState.data.equippedAttachments[weaponId][category] = attachmentId;
+    
+    // 현재 무기의 스탯 업데이트
+    if (weaponId === gameState.data.currentWeapon) {
+        const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments[weaponId]);
+        maxAmmo = stats.mag;
+        currentAmmo = Math.min(currentAmmo, maxAmmo); // 탄창 용량이 줄어든 경우 대응
+        reloadSpeed = stats.reloadSpeed;
+        updateAmmoDisplay();
+    }
+    
+    uiManager.showNotification(`${attachment.name} 장착 완료`);
     uiManager.updateAll();
     renderAttachments();
-    updateAmmoDisplay();
     gameState.save();
 }
 
-function unequipAttachment(category) {
-    gameState.data.equippedAttachments[category] = null;
-    const weapon = window.getWeaponById(gameState.data.currentWeapon);
-    const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments);
-    maxAmmo = stats.mag;
-    currentAmmo = maxAmmo;
-    reloadSpeed = stats.reloadSpeed;
+function unequipAttachment(weaponId, category) {
+    if (!gameState.data.equippedAttachments[weaponId]) return;
+    
+    const attachmentId = gameState.data.equippedAttachments[weaponId][category];
+    const attachment = window.getAttachmentById(attachmentId);
+    
+    gameState.data.equippedAttachments[weaponId][category] = null;
+    
+    // 현재 무기의 스탯 업데이트
+    if (weaponId === gameState.data.currentWeapon) {
+        const weapon = window.getWeaponById(weaponId);
+        const stats = window.calculateWeaponStats(weapon, gameState.data.equippedAttachments[weaponId]);
+        maxAmmo = stats.mag;
+        currentAmmo = Math.min(currentAmmo, maxAmmo);
+        reloadSpeed = stats.reloadSpeed;
+        updateAmmoDisplay();
+    }
+    
+    if (attachment) {
+        uiManager.showNotification(`${attachment.name} 해제 완료`);
+    }
     uiManager.updateAll();
     renderAttachments();
-    updateAmmoDisplay();
     gameState.save();
 }
+
+// 전역 함수로 노출 (UI에서 사용)
+window.equipAttachment = equipAttachment;
+window.unequipAttachment = unequipAttachment;
+window.openAttachmentMenu = (weaponId, slotType) => {
+    uiManager.showAttachmentMenu(weaponId, slotType);
+};
+window.closeAttachmentMenu = () => {
+    const menuEl = document.getElementById('attachmentMenu');
+    if (menuEl) menuEl.style.display = 'none';
+};
+window.removeAttachment = (weaponId, slotType) => {
+    unequipAttachment(weaponId, slotType);
+};
 
 // 업적 확인 및 알림
 function checkAndNotifyAchievements() {

@@ -73,20 +73,36 @@ const ACHIEVEMENTS = [
         reward: 300
     },
     { 
-        id: 'collector', 
-        name: '수집가', 
-        description: '모든 부착물 구매', 
+        id: 'first_purchase', 
+        name: '첫 구매', 
+        description: '첫 무기 구매', 
+        icon: '🛒',
+        condition: (stats) => stats.ownedWeapons >= 2,
+        reward: 100
+    },
+    { 
+        id: 'weapon_collector', 
+        name: '무기 수집가', 
+        description: '5개 무기 구매', 
+        icon: '🎯',
+        condition: (stats) => stats.ownedWeapons >= 5,
+        reward: 300
+    },
+    { 
+        id: 'attachment_collector', 
+        name: '부착물 수집가', 
+        description: '20개 부착물 구매', 
         icon: '🎁',
-        condition: (stats) => stats.ownedAttachments >= 14,
+        condition: (stats) => stats.ownedAttachments >= 20,
         reward: 400
     },
     { 
         id: 'arsenal', 
         name: '무기고', 
-        description: '모든 무기 해금', 
+        description: '모든 무기 구매', 
         icon: '🔫',
-        condition: (stats) => stats.level >= 10,
-        reward: 500
+        condition: (stats) => stats.ownedWeapons >= 10,
+        reward: 1000
     },
     { 
         id: 'marathon', 

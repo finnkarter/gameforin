@@ -7,12 +7,13 @@ class GameState {
             // 플레이어 정보
             level: 1,
             xp: 0,
-            coins: 0,
+            coins: 1000, // 시작 코인 증가
             
             // 무기 및 장비
             currentWeapon: 'glock17',
+            ownedWeapons: ['glock17'], // 소유한 무기 목록 (기본 무기는 처음부터 소유)
             ownedAttachments: [],
-            equippedAttachments: { sights: null, barrel: null, magazine: null, grip: null },
+            equippedAttachments: {}, // 무기별 부착물 저장: { weaponId: { category: attachmentId } }
             
             // 게임 설정
             gameMode: 'classic',
@@ -125,7 +126,8 @@ class GameState {
             totalCoinsEarned: this.data.totalCoinsEarned,
             speedModeHighScore: this.data.speedModeHighScore,
             precisionModeHighScore: this.data.precisionModeHighScore,
-            ownedAttachments: this.data.ownedAttachments.length
+            ownedAttachments: this.data.ownedAttachments.length,
+            ownedWeapons: this.data.ownedWeapons.length
         };
 
         const newAchievements = window.checkAchievements(stats, this.data.unlockedAchievements);

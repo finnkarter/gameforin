@@ -34,7 +34,134 @@ class UIManager {
     }
 
     updateCurrentWeaponStats() {
-        // 이 메서드는 main에서 구현
+        const data = this.gameState.data;
+        const weapon = getWeaponById(data.selectedWeapon);
+        if (!weapon) return;
+
+        const equippedAttachments = data.equippedAttachments[weapon.id] || {};
+        const stats = calculateWeaponStats(weapon, equippedAttachments);
+
+        // 기본 무기 정보 업데이트
+        const weaponInfoEl = document.getElementById('weaponInfo');
+        if (weaponInfoEl) {
+            weaponInfoEl.innerHTML = `
+                <div class="weapon-details">
+                    <h3>${weapon.name}</h3>
+                    <p class="weapon-description">${weapon.description || ''}</p>
+                    <div class="weapon-caliber">탄종: ${weapon.caliber}</div>
+                </div>
+            `;
+        }
+
+        // 무기 스탯 업데이트
+        this.updateWeaponStatBars(weapon, stats);
+        this.updateAttachmentSlots(weapon, equippedAttachments);
+    }
+
+    updateWeaponStatBars(weapon, stats) {
+        const statElements = [
+            { id: 'damageBar', value: stats.damage, max: 150 },
+            { id: 'accuracyBar', value: stats.accuracy, max: 100 },
+            { id: 'recoilBar', value: 100 - (stats.recoil - 50), max: 100 }, // 반전된 값 (낮을수록 좋음)
+            { id: 'ergoBar', value: weapon.ergonomics || 50, max: 100 },
+            { id: 'stealthBar', value: stats.stealth, max: 100 }
+        ];
+
+        statElements.forEach(stat => {
+            const element = document.getElementById(stat.id);
+            if (element) {
+                const percentage = Math.min(100, (stat.value / stat.max) * 100);
+                element.style.width = percentage + '%';
+                
+                // 값 표시
+                const valueEl = element.parentElement.querySelector('.stat-value');
+                if (valueEl) {
+                    valueEl.textContent = Math.round(stat.value);
+                }
+            }
+        });
+    }
+
+    updateAttachmentSlots(weapon, equippedAttachments) {
+        const availableSlots = getAvailableSlots(weapon);
+        const slotsContainer = document.getElementById('attachmentSlots');
+        
+        if (!slotsContainer) return;
+
+        slotsContainer.innerHTML = '';
+        availableSlots.forEach(slotType => {
+            const slotEl = document.createElement('div');
+            slotEl.className = 'attachment-slot';
+            slotEl.dataset.slotType = slotType;
+            
+            const currentAttachment = equippedAttachments[slotType];
+            const attachmentData = currentAttachment ? getAttachmentById(currentAttachment) : null;
+            
+            slotEl.innerHTML = `
+                <div class="slot-header">
+                    <span class="slot-name">${CATEGORY_NAMES[slotType]}</span>
+                    ${attachmentData ? `<button class="slot-remove" onclick="removeAttachment('${weapon.id}', '${slotType}')">×</button>` : ''}
+                </div>
+                <div class="slot-content">
+                    ${attachmentData ? 
+                        `<div class="attachment-equipped">
+                            <span class="attachment-name">${attachmentData.name}</span>
+                            <div class="attachment-stats">${this.formatAttachmentStats(attachmentData)}</div>
+                        </div>` : 
+                        `<button class="slot-empty" onclick="openAttachmentMenu('${weapon.id}', '${slotType}')">
+                            + 부착물 선택
+                        </button>`
+                    }
+                </div>
+            `;
+            
+            slotsContainer.appendChild(slotEl);
+        });
+    }
+
+    formatAttachmentStats(attachment) {
+        const stats = [];
+        if (attachment.damage) stats.push(`데미지 ${attachment.damage > 0 ? '+' : ''}${attachment.damage}`);
+        if (attachment.accuracy) stats.push(`정확도 +${attachment.accuracy}`);
+        if (attachment.recoil) stats.push(`반동 ${attachment.recoil}`);
+        if (attachment.magBonus) stats.push(`탄창 +${attachment.magBonus}%`);
+        if (attachment.stealth) stats.push(`은밀성 ${attachment.stealth}`);
+        return stats.join(', ');
+    }
+
+    showAttachmentMenu(weaponId, slotType) {
+        const weapon = getWeaponById(weaponId);
+        const compatibleAttachments = getCompatibleAttachments(weapon, slotType);
+        const playerLevel = this.gameState.data.level;
+        
+        const menuEl = document.getElementById('attachmentMenu');
+        if (!menuEl) return;
+
+        const availableAttachments = compatibleAttachments.filter(att => att.level <= playerLevel);
+        
+        menuEl.innerHTML = `
+            <div class="attachment-menu-header">
+                <h3>${CATEGORY_NAMES[slotType]} 선택</h3>
+                <button onclick="closeAttachmentMenu()">×</button>
+            </div>
+            <div class="attachment-list">
+                ${availableAttachments.map(att => `
+                    <div class="attachment-item" onclick="equipAttachment('${weaponId}', '${slotType}', '${att.id}')">
+                        <div class="attachment-info">
+                            <div class="attachment-name">${att.name}</div>
+                            <div class="attachment-stats">${this.formatAttachmentStats(att)}</div>
+                            <div class="attachment-price">가격: ${att.price} 코인</div>
+                        </div>
+                        ${this.gameState.data.coins >= att.price ? 
+                            '<button class="equip-btn">장착</button>' : 
+                            '<button class="equip-btn disabled">코인 부족</button>'
+                        }
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        menuEl.style.display = 'block';
     }
 
     updateGameHUD(score, time, ammo, accuracy) {
